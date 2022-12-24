@@ -13,6 +13,7 @@ mirabel = ["dep:mirabel", "dep:three_player_chess_frontend"]
 
 [dependencies]
 num-traits = "0.2"
+nalgebra = "0.31.0"
 
 [dependencies.surena_game]
 git = "https://github.com/vilaureu/surena_game_rs.git"
