@@ -132,7 +132,7 @@ impl FrontendMethods for MirabelFrontend {
                 frontend.mouse_moved(Vector2::new(e.x, e.y));
                 let btn = u32::from(e.button);
                 if btn == SDL_BUTTON_LEFT {
-                    frontend.mouse_clicked(false);
+                    frontend.mouse_released(false);
                 } else if btn == SDL_BUTTON_RIGHT {
                     frontend.mouse_released(true);
                 }
@@ -168,12 +168,14 @@ impl FrontendMethods for MirabelFrontend {
     }
 
     fn render(mut frontend: mirabel::frontend::Wrapped<Self>) -> mirabel::Result<()> {
-        if frontend.disabled {
+        let canvas = frontend.canvas.get();
+        let tpc_fe = &mut frontend.frontend.fe;
+        let dd = frontend.display_data;
+
+        if frontend.frontend.disabled {
+            canvas.clear(tpc_fe.background);
             return Ok(());
         }
-        let tpc_fe = &mut frontend.frontend.fe;
-        let canvas = frontend.canvas.get();
-        let dd = frontend.display_data;
 
         // TODO(cmrs): this code should really live in the frontend, not here.
         // but because of mirabels viewport shenanigans we have to do this
