@@ -48,7 +48,6 @@ impl FrontendMethods for MirabelFrontend {
     }
 
     fn runtime_opts_display(fe: mirabel::frontend::Wrapped<Self>) -> mirabel::Result<()> {
-        // No runtime options.
         imgui::check_box(
             ValidCStr::try_from("Show Notation\0").unwrap(),
             &mut fe.frontend.show_notation,

@@ -15,11 +15,28 @@ pub const GAME_NAME: &str = "ThreePlayerChess\0";
 pub const VARIANT_NAME: &str = "Classic\0";
 pub const IMPL_NAME: &str = "three_player_chess_cmrs\0";
 
+pub const BUF_SIZER: buf_sizer = buf_sizer {
+    options_str: 1,
+    state_str: MAX_POSITION_STRING_SIZE + 1,
+    player_count: HB_COUNT as u8,
+    max_players_to_move: 1,
+    // NOTE(cmrs): this is an overestimation, and a very bad guess.
+    // But three little birds told me this whole buf sizer thing is gonna die
+    // anyways so... good enough
+    max_moves: 1024,
+    max_results: 1,
+    move_str: MAX_MOVE_STRING_SIZE + 1,
+    print_str: BOARD_STRING.len() + 1,
+    legacy_str: 0,
+    max_actions: 0,
+    serialization_size: 0,
+};
+
 /// Generate [`game_methods`] struct.
 fn three_player_chess() -> game_methods {
     let mut features = game_feature_flags::default();
     features.set_print(true);
-    features.set_options(true);
+    // features.set_options(true); // NOTE(cmrs): will come later(tm)
 
     create_game_methods::<ThreePlayerChessGame>(Metadata {
         game_name: cstr(GAME_NAME),
@@ -45,33 +62,15 @@ pub struct ThreePlayerChessGame {
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct GameOptions {
-    //TODO(cmrs): ?
+    // TODO(cmrs): maybe make the eval for the neutral player on checkmate an option.
+    // That really only affects engines though.
+    // Once there's a system for draw offers / (collective) resignation, we
+    // might need to make that configurable here too.
 }
 
 impl GameOptions {
     fn new(_options: &str) -> Result<Self> {
         Ok(Self {})
-    }
-
-    /// Calculate the [`buf_sizer`].
-    fn sizer(&self) -> buf_sizer {
-        // Calculations might overflow with only 16 bits.
-        #[allow(clippy::assertions_on_constants)]
-        {
-            assert!(usize::BITS >= 32);
-        }
-
-        buf_sizer {
-            options_str: 1,
-            state_str: MAX_POSITION_STRING_SIZE + 1,
-            player_count: HB_COUNT as u8,
-            max_players_to_move: 1,
-            max_moves: 1024, // TODO: this is a very bad guess.
-            max_results: 1,
-            move_str: MAX_MOVE_STRING_SIZE + 1,
-            print_str: BOARD_STRING.len() + 1,
-            ..Default::default()
-        }
     }
 }
 
@@ -90,11 +89,6 @@ pub fn player_to_id(player: Color) -> player_id {
 }
 
 impl GameMethods for ThreePlayerChessGame {
-    /// Creates a new instance of the game and a corresponding [`buf_sizer`].
-    ///
-    /// See [`GameOptions::new()`] for a documentation of the options string.
-    /// See [`Self::import_state()`] for a documentation of the state string.
-    /// Serialized `init_info` is not supported.
     fn create(init_info: &GameInit) -> Result<(Self, buf_sizer)> {
         let (options, state) = match *init_info {
             GameInit::Default => (None, None),
@@ -106,7 +100,7 @@ impl GameMethods for ThreePlayerChessGame {
                 if legacy.is_some() {
                     return Err(Error::new_static(
                         ErrorCode::InvalidLegacy,
-                        "unexpected legacy\0",
+                        "legacys are not supported\0",
                     ));
                 }
                 (opts, state)
@@ -114,7 +108,7 @@ impl GameMethods for ThreePlayerChessGame {
             GameInit::Serialized(_) => {
                 return Err(Error::new_static(
                     ErrorCode::FeatureUnsupported,
-                    "serialized init info unsupported\0",
+                    "serialized init info is not supported\0",
                 ))
             }
         };
@@ -123,10 +117,9 @@ impl GameMethods for ThreePlayerChessGame {
             .map(GameOptions::new)
             .transpose()?
             .unwrap_or_default();
-        let sizer = options.sizer();
         let game = if let Some(state_str) = state {
             ThreePlayerChess::from_str(state_str).map_err(|err_str| {
-                // new static doesnt work unforunately because we don't have a null
+                // new static doesnt work unforunately because we don't have a zero terminator
                 Error::new_dynamic(ErrorCode::InvalidState, err_str.to_owned())
             })?
         } else {
@@ -136,13 +129,12 @@ impl GameMethods for ThreePlayerChessGame {
             options,
             board: game,
         };
-        Ok((game, sizer))
+        Ok((game, BUF_SIZER))
     }
 
     fn export_options(&mut self, str_buf: &mut StrBuf) -> Result<()> {
         // TODO(cmrs)
         write!(str_buf, "",).expect("writing options buffer failed");
-
         Ok(())
     }
 
@@ -256,10 +248,7 @@ impl GameMethods for ThreePlayerChessGame {
         let tpc_move = Move::try_from(mov)
             .map_err(|_| Error::new_static(InvalidInput, "failed to parse move code\0"))?;
         if !self.board.is_valid_move(tpc_move) {
-            return Err(Error::new_static(
-                InvalidInput,
-                "failed to parse move code\0",
-            ));
+            return Err(Error::new_static(InvalidInput, "invalid move\0"));
         }
         Ok(())
     }
