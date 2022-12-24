@@ -1,0 +1,35 @@
+[package]
+name = "three_player_chess_mirabel"
+version = "0.1.0"
+edition = "2021"
+authors = ["cmrschwarz"]
+
+[lib]
+crate-type = ["cdylib"]
+
+[features]
+default = ["mirabel"]
+mirabel = ["dep:mirabel", "dep:three_player_chess_frontend"]
+
+[dependencies]
+num-traits = "0.2"
+
+[dependencies.surena_game]
+git = "https://github.com/vilaureu/surena_game_rs.git"
+rev="fc703a3245038014d2d949ef409aac50cdd81027"
+
+[dependencies.three_player_chess]
+git = "https://github.com/cmrschwarz/three_player_chess.git"
+branch="main"
+crate= "three_player_chess"
+
+[dependencies.mirabel]
+git = "https://github.com/vilaureu/mirabel_rs.git"
+rev="9f35ecb65f557b7eec3b3d230cf83c9db4ba4634"
+optional=true
+
+[dependencies.three_player_chess_frontend]
+git = "https://github.com/cmrschwarz/three_player_chess.git"
+branch="main"
+crate= "three_player_chess_frontend"
+optional=true
