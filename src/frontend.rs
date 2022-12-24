@@ -50,6 +50,10 @@ impl FrontendMethods for MirabelFrontend {
     fn runtime_opts_display(fe: mirabel::frontend::Wrapped<Self>) -> mirabel::Result<()> {
         // No runtime options.
         imgui::check_box(
+            ValidCStr::try_from("Show Notation\0").unwrap(),
+            &mut fe.frontend.show_notation,
+        );
+        imgui::check_box(
             ValidCStr::try_from("Transformed Pieces\0").unwrap(),
             &mut fe.frontend.transformed_pieces,
         );
@@ -60,6 +64,14 @@ impl FrontendMethods for MirabelFrontend {
         imgui::check_box(
             ValidCStr::try_from("Highlight Attacked Pieces\0").unwrap(),
             &mut fe.frontend.highlight_attacked,
+        );
+        imgui::check_box(
+            ValidCStr::try_from("Highlight Capturable Pieces\0").unwrap(),
+            &mut fe.frontend.highlight_capturable,
+        );
+        imgui::check_box(
+            ValidCStr::try_from("Include Illegal Moves in Hints (Right Click)\0").unwrap(),
+            &mut fe.frontend.show_non_legal_move_hints,
         );
         Ok(())
     }
