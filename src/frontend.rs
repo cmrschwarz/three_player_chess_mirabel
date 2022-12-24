@@ -7,10 +7,10 @@ use mirabel::{
         create_frontend_methods, frontend_feature_flags, frontend_methods, FrontendMethods,
         Metadata,
     },
-    plugin_get_frontend_methods, semver,
+    imgui, plugin_get_frontend_methods, semver,
     sys::SDL_BUTTON_LEFT,
     sys::SDL_BUTTON_RIGHT,
-    ErrorCode, EventAny,
+    ErrorCode, EventAny, ValidCStr,
 };
 use nalgebra::Vector2;
 use surena_game::Error;
@@ -47,8 +47,20 @@ impl FrontendMethods for MirabelFrontend {
         })
     }
 
-    fn runtime_opts_display(_frontend: mirabel::frontend::Wrapped<Self>) -> mirabel::Result<()> {
+    fn runtime_opts_display(fe: mirabel::frontend::Wrapped<Self>) -> mirabel::Result<()> {
         // No runtime options.
+        imgui::check_box(
+            ValidCStr::try_from("Transformed Pieces\0").unwrap(),
+            &mut fe.frontend.transformed_pieces,
+        );
+        imgui::check_box(
+            ValidCStr::try_from("Transform Dragged Piece\0").unwrap(),
+            &mut fe.frontend.transform_dragged_pieces,
+        );
+        imgui::check_box(
+            ValidCStr::try_from("Highlight Attacked Pieces\0").unwrap(),
+            &mut fe.frontend.highlight_attacked,
+        );
         Ok(())
     }
 

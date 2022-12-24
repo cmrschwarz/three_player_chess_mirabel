@@ -11,7 +11,7 @@ use surena_game::{
 use surena_game::{ErrorCode, GameInit};
 use three_player_chess::board::*;
 
-pub const GAME_NAME: &str = "Three Player Chess\0";
+pub const GAME_NAME: &str = "ThreePlayerChess\0";
 pub const VARIANT_NAME: &str = "Classic\0";
 pub const IMPL_NAME: &str = "three_player_chess_cmrs\0";
 
