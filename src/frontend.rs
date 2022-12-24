@@ -176,48 +176,9 @@ impl FrontendMethods for MirabelFrontend {
             canvas.clear(tpc_fe.background);
             return Ok(());
         }
+        tpc_fe.update_dimensions(0, 0, dd.w as i32, dd.h as i32);
+        tpc_fe.render(canvas);
 
-        // TODO(cmrs): this code should really live in the frontend, not here.
-        // but because of mirabels viewport shenanigans we have to do this
-        // because the frontend render() method will not respect these offsets
-        tpc_fe.board_origin = Vector2::new((dd.x + dd.w / 2.) as i32, (dd.y + dd.h / 2.) as i32);
-        tpc_fe.board_radius = std::cmp::min(dd.w as i32, dd.h as i32) as f32 * 0.46;
-        tpc_fe.hovered_square = None;
-        if tpc_fe.dragged_square.is_some() {
-            if let Some(sq) = tpc_fe.get_board_pos_from_screen_pos(tpc_fe.cursor_pos) {
-                if tpc_fe.possible_moves[usize::from(sq)] {
-                    tpc_fe.hovered_square = Some(sq);
-                }
-            }
-        }
-
-        let translation = tpc_fe.board_origin.cast::<f32>();
-
-        canvas.save();
-        canvas.translate((translation.x - dd.x, translation.y - dd.y));
-        canvas.scale((tpc_fe.board_radius, tpc_fe.board_radius));
-        canvas.save();
-
-        tpc_fe.render_background(canvas);
-        canvas.restore();
-
-        canvas.save();
-        tpc_fe.render_notation(canvas);
-        canvas.restore();
-
-        for c in three_player_chess::board::Color::iter() {
-            for right in [true, false] {
-                canvas.save();
-                tpc_fe.render_hexboard(canvas, *c, right);
-                canvas.restore();
-            }
-        }
-
-        canvas.save();
-        tpc_fe.render_dragged_piece(canvas);
-        canvas.restore();
-
-        canvas.restore();
         Ok(())
     }
 
